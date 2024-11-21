@@ -250,10 +250,45 @@ ggplot(rf_predictions, aes(x = average_rating, y = .pred)) +
   geom_abline(slope = 1, intercept = 0, linetype = "dashed", color = "red") +
   labs(
     title = "Predicted vs Actual Values: Random Forest",
+print(rf_metrics)
+    
+#Breanna 
+#Gradient Boosting 
+
+set.seed(123)
+split_index <- createDataPartition(books$average_rating, p = 0.8, list = FALSE)
+train_data <- books[split_index, ]
+test_data <- books[-split_index, ]
+
+gbm_model <- gbm(
+  average_rating ~ num_pages + ratings_count + text_reviews_count + publication_date,
+  data = train_data,
+  distribution = "gaussian",
+  n.trees = 100,
+  interaction.depth = 3,
+  shrinkage = 0.01,
+  n.minobsinnode = 10,
+  cv.folds = 5,
+  verbose = FALSE
+)
+
+summary(gbm_model)
+
+predictions <- predict(gbm_model, newdata = test_data, n.trees = gbm_model$n.trees)
+rmse <- sqrt(mean((predictions - test_data$average_rating)^2))
+cat("RMSE:", rmse, "\n")
+
+results <- data.frame(
+  Actual = test_data$average_rating,
+  Predicted = predictions
+)
+
+ggplot(results, aes(x = Actual, y = Predicted)) +
+  geom_point(alpha = 0.5, color = "blue") +
+  geom_abline(intercept = 0, slope = 1, color = "red") +
+  labs(title = "Actual vs Predicted Ratings", x = "Actual Ratings", y = "Predicted Ratings")
+
     x = "Actual Values (average_rating)",
     y = "Predicted Values"
   ) +
   theme_minimal()
-
-
-print(rf_metrics)
